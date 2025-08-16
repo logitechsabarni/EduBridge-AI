@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import StudentDashboard from "./components/Student Dashboard.jsx";
-import TeacherDashboard from "./components/Teacher Dashboard.jsx";
+import StudentDashboard from "./components/StudentDashboard.jsx";
+import TeacherDashboard from "./components/TeacherDashboard.jsx";
 
 export default function App() {
   const [user, setUser] = useState(null);
