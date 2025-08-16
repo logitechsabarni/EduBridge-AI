@@ -7,11 +7,18 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-# Initialize OpenAI client
-client = OpenAI()
+# Initialize OpenAI client (requires OPENAI_API_KEY in environment)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Dummy user database (for testing login)
+USERS = {
+    "test@example.com": {
+        "password": "password123",
+        "name": "Test User"
+    }
+}
 
-# Root route
+# Root route (check if server is alive)
 @app.route("/")
 def home():
     return {"ok": True, "service": "EduBridgeAI Backend"}
@@ -24,25 +31,20 @@ def health():
 # ✅ Login route
 @app.route("/api/login", methods=["POST"])
 def login():
-    try:
-        data = request.json
-        email = data.get("email")
-        name = data.get("name")
-        role = data.get("role", "student")
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
 
-        if not email or not name:
-            return jsonify({"error": "Name and email are required"}), 400
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
 
-        # For now, just echo back user info (no password/auth in demo)
-        return jsonify({
-            "email": email,
-            "name": name,
-            "role": role
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    user = USERS.get(email)
+    if user and user["password"] == password:
+        return jsonify({"name": user["name"], "email": email})
+    else:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-# Example chat route
+# ✅ Chat route
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
@@ -52,7 +54,6 @@ def chat():
         if not user_message:
             return jsonify({"error": "Message is required"}), 400
 
-        # Call OpenAI
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -67,16 +68,16 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Doubt Solver route
+# ✅ Doubt solver route
 @app.route("/api/doubt", methods=["POST"])
 def doubt():
     try:
         data = request.json
         question = data.get("question", "")
+
         if not question:
             return jsonify({"answer": "(No question provided)"}), 400
 
-        # Call OpenAI
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -84,6 +85,7 @@ def doubt():
                 {"role": "user", "content": question}
             ],
         )
+
         answer = response.choices[0].message.content
         return jsonify({"answer": answer})
 
