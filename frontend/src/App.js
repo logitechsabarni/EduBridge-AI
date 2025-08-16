@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
+import DoubtSolver from "./components/DoubtSolver";
 import api from "./api";
 
 export default function App() {
@@ -56,20 +57,27 @@ export default function App() {
     );
   }
 
-  // Pass sendMessage and chatMessages to dashboards
-  return user.role === "teacher" ? (
-    <TeacherDashboard
-      user={user}
-      sendMessage={sendMessage}
-      chatMessages={chatMessages}
-      setChatMessages={setChatMessages}
-    />
-  ) : (
-    <StudentDashboard
-      user={user}
-      sendMessage={sendMessage}
-      chatMessages={chatMessages}
-      setChatMessages={setChatMessages}
-    />
+  // Render dashboards and DoubtSolver
+  return (
+    <div style={{ padding: 20 }}>
+      {user.role === "teacher" ? (
+        <TeacherDashboard
+          user={user}
+          sendMessage={sendMessage}
+          chatMessages={chatMessages}
+          setChatMessages={setChatMessages}
+        />
+      ) : (
+        <StudentDashboard
+          user={user}
+          sendMessage={sendMessage}
+          chatMessages={chatMessages}
+          setChatMessages={setChatMessages}
+        />
+      )}
+      <div style={{ marginTop: 40 }}>
+        <DoubtSolver />
+      </div>
+    </div>
   );
 }
