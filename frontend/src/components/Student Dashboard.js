@@ -1,55 +1,78 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Lesson from "./Lesson";
 import Quiz from "./Quiz";
-import DoubtSolver from "./DoubtSolver";
 
-export default function StudentDashboard({ user }) {
-  const [lessons, setLessons] = useState([]);
-  const [selectedLesson, setSelectedLesson] = useState(null);
+export default function StudentDashboard({ user, sendMessage, chatMessages, setChatMessages }) {
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetch(import.meta.env.VITE_API_BASE + "/api/lessons")
-      .then((r) => r.json())
-      .then(setLessons)
-      .catch(() => setLessons([]));
-  }, []);
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const newMessage = { role: "user", content: input };
+    setChatMessages([...chatMessages, newMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const reply = await sendMessage(input);
+      setChatMessages((prev) => [...prev, { role: "ai", content: reply }]);
+    } catch (err) {
+      console.error(err);
+      setChatMessages((prev) => [...prev, { role: "ai", content: "(Error) Could not get reply" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", padding: 16 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Welcome, {user.name}</h2>
-        <div>Role: {user.role}</div>
-      </header>
+    <div style={{ padding: 16 }}>
+      <h2>Welcome, {user.name} (Student)</h2>
 
-      <section style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 16, marginTop: 12 }}>
-        <aside style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-          <h3>Lessons</h3>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {lessons.map((l) => (
-              <li key={l.id} style={{ marginBottom: 8 }}>
-                <button onClick={() => setSelectedLesson(l)} style={{ width: "100%" }}>
-                  {l.subject}: {l.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </aside>
+      <div style={{ marginBottom: 24 }}>
+        <h3>Lessons</h3>
+        <Lesson role="student" />
+      </div>
 
-        <main style={{ display: "grid", gap: 16 }}>
-          {selectedLesson ? (
-            <>
-              <Lesson lesson={selectedLesson} />
-              <Quiz lessonId={selectedLesson.id} />
-            </>
-          ) : (
-            <div style={{ border: "1px dashed #bbb", padding: 16, borderRadius: 10 }}>
-              Select a lesson to view content and quiz.
+      <div style={{ marginBottom: 24 }}>
+        <h3>Quizzes</h3>
+        <Quiz role="student" />
+      </div>
+
+      <div style={{ border: "1px solid #ccc", borderRadius: 10, padding: 16 }}>
+        <h3>AI Chat</h3>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 12,
+            height: 250,
+            overflowY: "auto",
+            marginBottom: 12,
+            background: "#f9f9f9",
+          }}
+        >
+          {chatMessages.map((msg, idx) => (
+            <div key={idx} style={{ marginBottom: 8 }}>
+              <strong>{msg.role === "user" ? "You: " : "EduBridgeAI: "}</strong>
+              {msg.content}
             </div>
-          )}
+          ))}
+        </div>
 
-          <DoubtSolver />
-        </main>
-      </section>
+        <form onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            style={{ flex: 1, padding: 8, borderRadius: 4, border: "1px solid #ccc" }}
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading}>{loading ? "Sending..." : "Send"}</button>
+        </form>
+      </div>
     </div>
   );
 }
