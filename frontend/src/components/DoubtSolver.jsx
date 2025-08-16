@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import api from "./api";
 
 export default function DoubtSolver() {
   const [q, setQ] = useState("");
@@ -11,10 +10,14 @@ export default function DoubtSolver() {
     setLoading(true);
     setA("");
     try {
-      const { data } = await api.post("/api/doubt", { question: q });
+      const r = await fetch(import.meta.env.VITE_API_BASE + "/api/doubt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q }),
+      });
+      const data = await r.json();
       setA(data.answer || "(No answer)");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setA("(Error) Could not get answer.");
     } finally {
       setLoading(false);
@@ -22,7 +25,7 @@ export default function DoubtSolver() {
   };
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
+    <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12, marginTop: 20 }}>
       <h3>Doubt Solver (AI)</h3>
       <textarea
         rows={4}
@@ -32,8 +35,12 @@ export default function DoubtSolver() {
         onChange={(e) => setQ(e.target.value)}
       />
       <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-        <button onClick={ask} disabled={loading}>{loading ? "Thinking…" : "Get Answer"}</button>
-        <button onClick={() => { setQ(""); setA(""); }} disabled={loading}>Clear</button>
+        <button onClick={ask} disabled={loading}>
+          {loading ? "Thinking…" : "Get Answer"}
+        </button>
+        <button onClick={() => { setQ(""); setA(""); }} disabled={loading}>
+          Clear
+        </button>
       </div>
       {a && (
         <div style={{ whiteSpace: "pre-wrap", marginTop: 12, background: "#fafafa", padding: 10, borderRadius: 8 }}>
