@@ -6,8 +6,8 @@ export default function TeacherDashboard({ user }) {
   return (
     <div style={{ padding: 20 }}>
       <h2>Welcome, {user.name} (Teacher)</h2>
-      <Lesson />
-      <Quiz />
+      <Lesson role={user.role} />
+      <Quiz role={user.role} />
       <p>Manage lessons and quizzes here.</p>
     </div>
   );
