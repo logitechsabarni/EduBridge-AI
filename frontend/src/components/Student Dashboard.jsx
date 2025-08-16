@@ -7,8 +7,8 @@ export default function StudentDashboard({ user }) {
   return (
     <div style={{ padding: 20 }}>
       <h2>Welcome, {user.name} (Student)</h2>
-      <Lesson />
-      <Quiz />
+      <Lesson role={user.role} />
+      <Quiz role={user.role} />
       <DoubtSolver />
     </div>
   );
