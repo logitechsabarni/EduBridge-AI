@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "./api";
 
 export default function DoubtSolver() {
   const [q, setQ] = useState("");
@@ -10,14 +11,10 @@ export default function DoubtSolver() {
     setLoading(true);
     setA("");
     try {
-      const r = await fetch(import.meta.env.VITE_API_BASE + "/api/doubt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q }),
-      });
-      const data = await r.json();
+      const { data } = await api.post("/api/doubt", { question: q });
       setA(data.answer || "(No answer)");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setA("(Error) Could not get answer.");
     } finally {
       setLoading(false);
