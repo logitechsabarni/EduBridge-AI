@@ -1,40 +1,40 @@
 import React, { useState } from "react";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
+import api from "./api";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "https://<your-backend-url>";
-
-  // Login handler
+  // Login handler using Axios
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
     const name = e.target.name.value;
     const role = e.target.role.value;
 
-    const res = await fetch(`${API_BASE}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name, role }),
-    });
-    const data = await res.json();
-    if (!data.error) setUser(data);
+    try {
+      const { data } = await api.post("/api/login", { email, name, role });
+      if (!data.error) setUser(data);
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert("Login failed. Please check your backend.");
+    }
   };
 
-  // Chat API call
+  // Chat API call using Axios
   const sendMessage = async (message) => {
-    const res = await fetch(`${API_BASE}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
-    const data = await res.json();
-    return data.reply;
+    try {
+      const { data } = await api.post("/api/chat", { message });
+      return data.reply;
+    } catch (err) {
+      console.error("Chat failed:", err);
+      return "Error: Could not reach backend.";
+    }
   };
 
+  // If not logged in, show login form
   if (!user) {
     return (
       <div style={{ fontFamily: "system-ui, sans-serif", maxWidth: 520, margin: "60px auto" }}>
@@ -50,7 +50,7 @@ export default function App() {
           <button type="submit">Continue</button>
         </form>
         <p style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
-          Set <code>VITE_API_BASE</code> in <code>.env</code> (e.g., {API_BASE})
+          Set <code>VITE_API_BASE</code> in <code>.env</code> (e.g., https://your-backend-url)
         </p>
       </div>
     );
@@ -58,8 +58,18 @@ export default function App() {
 
   // Pass sendMessage and chatMessages to dashboards
   return user.role === "teacher" ? (
-    <TeacherDashboard user={user} sendMessage={sendMessage} chatMessages={chatMessages} setChatMessages={setChatMessages} />
+    <TeacherDashboard
+      user={user}
+      sendMessage={sendMessage}
+      chatMessages={chatMessages}
+      setChatMessages={setChatMessages}
+    />
   ) : (
-    <StudentDashboard user={user} sendMessage={sendMessage} chatMessages={chatMessages} setChatMessages={setChatMessages} />
+    <StudentDashboard
+      user={user}
+      sendMessage={sendMessage}
+      chatMessages={chatMessages}
+      setChatMessages={setChatMessages}
+    />
   );
 }
