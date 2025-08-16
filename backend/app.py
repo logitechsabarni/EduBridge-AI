@@ -20,6 +20,27 @@ def home():
 def health():
     return jsonify({"ok": True, "service": "EduBridgeAI Backend"})
 
+# ✅ Login route
+@app.route("/api/login", methods=["POST"])
+def login():
+    try:
+        data = request.json
+        email = data.get("email")
+        name = data.get("name")
+        role = data.get("role", "student")
+
+        if not email or not name:
+            return jsonify({"error": "Name and email are required"}), 400
+
+        # For now, just echo back user info (no password/auth in demo)
+        return jsonify({
+            "email": email,
+            "name": name,
+            "role": role
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Example chat route
 @app.route("/api/chat", methods=["POST"])
 def chat():
