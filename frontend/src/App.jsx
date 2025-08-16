@@ -12,18 +12,32 @@ export default function App() {
     const role = e.target.role.value;
 
     try {
-      const res = await fetch(
-        import.meta.env.VITE_API_BASE + "/api/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name, role }),
-        }
-      );
-      const data = await res.json();
-      if (!data.error) setUser(data);
+      const res = await fetch(import.meta.env.VITE_API_BASE + "/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, role }),
+      });
+
+      console.log("Login response status:", res.status);
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.error("Failed to parse JSON:", jsonErr);
+        alert("Backend did not return valid JSON");
+        return;
+      }
+
+      console.log("Login response data:", data);
+
+      if (data.error) {
+        alert("Backend error: " + data.error);
+      } else {
+        setUser(data);
+      }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Network or fetch error:", err);
       alert("Failed to login. Check backend connection.");
     }
   };
@@ -39,10 +53,7 @@ export default function App() {
       >
         <h1>EduBridge AI</h1>
         <p>Sign in (demo, no password):</p>
-        <form
-          onSubmit={handleLogin}
-          style={{ display: "grid", gap: 12 }}
-        >
+        <form onSubmit={handleLogin} style={{ display: "grid", gap: 12 }}>
           <input name="name" placeholder="Your name" required />
           <input name="email" placeholder="you@example.com" required />
           <select name="role" defaultValue="student">
