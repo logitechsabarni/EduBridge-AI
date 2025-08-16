@@ -4,20 +4,35 @@ import TeacherDashboard from "./components/TeacherDashboard";
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
 
+  const API_BASE = import.meta.env.VITE_API_BASE || "https://<your-backend-url>";
+
+  // Login handler
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
     const name = e.target.name.value;
     const role = e.target.role.value;
 
-    const res = await fetch(import.meta.env.VITE_API_BASE + "/api/login", {
+    const res = await fetch(`${API_BASE}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, name, role }),
     });
     const data = await res.json();
     if (!data.error) setUser(data);
+  };
+
+  // Chat API call
+  const sendMessage = async (message) => {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+    return data.reply;
   };
 
   if (!user) {
@@ -35,15 +50,16 @@ export default function App() {
           <button type="submit">Continue</button>
         </form>
         <p style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
-          Set <code>VITE_API_BASE</code> in <code>.env</code> (e.g., http://localhost:5000)
+          Set <code>VITE_API_BASE</code> in <code>.env</code> (e.g., {API_BASE})
         </p>
       </div>
     );
   }
 
+  // Pass sendMessage and chatMessages to dashboards
   return user.role === "teacher" ? (
-    <TeacherDashboard user={user} />
+    <TeacherDashboard user={user} sendMessage={sendMessage} chatMessages={chatMessages} setChatMessages={setChatMessages} />
   ) : (
-    <StudentDashboard user={user} />
+    <StudentDashboard user={user} sendMessage={sendMessage} chatMessages={chatMessages} setChatMessages={setChatMessages} />
   );
 }
