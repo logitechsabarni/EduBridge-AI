@@ -1,38 +1,78 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import Lesson from "./Lesson";
+import Quiz from "./Quiz";
 
-export default function TeacherDashboard({ user }) {
-  const [stats, setStats] = useState({ students: 32, avgProgress: 67, activeLessons: 2 });
+export default function TeacherDashboard({ user, sendMessage, chatMessages, setChatMessages }) {
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // You can replace this with real analytics later.
-  useEffect(() => {
-    // fetch analytics from backend when implemented
-  }, []);
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const newMessage = { role: "teacher", content: input };
+    setChatMessages([...chatMessages, newMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const reply = await sendMessage(input);
+      setChatMessages((prev) => [...prev, { role: "ai", content: reply }]);
+    } catch (err) {
+      console.error(err);
+      setChatMessages((prev) => [...prev, { role: "ai", content: "(Error) Could not get reply" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", padding: 16 }}>
-      <h2>Teacher Dashboard</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginTop: 12 }}>
-        <Card title="Active Students" value={stats.students} />
-        <Card title="Avg. Progress (%)" value={stats.avgProgress} />
-        <Card title="Active Lessons" value={stats.activeLessons} />
-      </div>
-      <div style={{ marginTop: 24, border: "1px solid #eee", padding: 16, borderRadius: 10 }}>
-        <h3>Next Steps</h3>
-        <ul>
-          <li>Assign Lesson: Fractions Basics to Grade 6</li>
-          <li>Review quiz results and recommend remedial content</li>
-          <li>Enable doubt review queue (coming soon)</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
+    <div style={{ padding: 16 }}>
+      <h2>Welcome, {user.name} (Teacher)</h2>
 
-function Card({ title, value }) {
-  return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16, textAlign: "center" }}>
-      <div style={{ fontSize: 12, color: "#666" }}>{title}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, marginTop: 6 }}>{value}</div>
+      <div style={{ marginBottom: 24 }}>
+        <h3>Lessons</h3>
+        <Lesson role="teacher" />
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <h3>Quizzes</h3>
+        <Quiz role="teacher" />
+      </div>
+
+      <div style={{ border: "1px solid #ccc", borderRadius: 10, padding: 16 }}>
+        <h3>AI Chat</h3>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 12,
+            height: 250,
+            overflowY: "auto",
+            marginBottom: 12,
+            background: "#f9f9f9",
+          }}
+        >
+          {chatMessages.map((msg, idx) => (
+            <div key={idx} style={{ marginBottom: 8 }}>
+              <strong>{msg.role === "teacher" ? "You: " : "EduBridgeAI: "}</strong>
+              {msg.content}
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            style={{ flex: 1, padding: 8, borderRadius: 4, border: "1px solid #ccc" }}
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading}>{loading ? "Sending..." : "Send"}</button>
+        </form>
+      </div>
     </div>
   );
 }
