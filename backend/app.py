@@ -1,14 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from openai import OpenAI
+import openai  # legacy SDK usage
 
 # Initialize Flask
 app = Flask(__name__)
 CORS(app)
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Root route / health check
 @app.route("/")
@@ -30,8 +30,8 @@ def chat():
         return jsonify({"error": "Message is required"}), 400
 
     try:
-        # Call OpenAI
-        response = client.chat.completions.create(
+        # Call OpenAI using legacy ChatCompletion
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are EduBridgeAI, an AI tutor."},
@@ -39,7 +39,7 @@ def chat():
             ],
         )
         # Extract reply
-        reply = response.choices[0].message.content
+        reply = response.choices[0].message["content"] if "message" in response.choices[0] else response.choices[0].text
         return jsonify({"reply": reply})
 
     except Exception as e:
