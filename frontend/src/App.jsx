@@ -52,7 +52,7 @@ export default function App() {
           <button type="submit">Continue</button>
         </form>
         <p style={{ marginTop: 12, fontSize: 12, color: "#666" }}>
-          Set <code>VITE_API_BASE</code> in <code>.env</code> (e.g., http://localhost:5000)
+          Set <code>VITE_API_BASE</code> in <code>.env</code>
         </p>
       </div>
     );
