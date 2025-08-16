@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Lesson from "./Lesson";
 import Quiz from "./Quiz";
+import DoubtSolver from "./DoubtSolver";
 
 export default function StudentDashboard({ user, sendMessage, chatMessages, setChatMessages }) {
   const [input, setInput] = useState("");
@@ -40,14 +41,14 @@ export default function StudentDashboard({ user, sendMessage, chatMessages, setC
         <Quiz role="student" />
       </div>
 
-      <div style={{ border: "1px solid #ccc", borderRadius: 10, padding: 16 }}>
+      <div style={{ border: "1px solid #ccc", borderRadius: 10, padding: 16, marginBottom: 24 }}>
         <h3>AI Chat</h3>
         <div
           style={{
             border: "1px solid #ddd",
             borderRadius: 8,
             padding: 12,
-            height: 250,
+            height: 200,
             overflowY: "auto",
             marginBottom: 12,
             background: "#f9f9f9",
@@ -72,6 +73,11 @@ export default function StudentDashboard({ user, sendMessage, chatMessages, setC
           />
           <button type="submit" disabled={loading}>{loading ? "Sending..." : "Send"}</button>
         </form>
+      </div>
+
+      <div>
+        <h3>Doubt Solver</h3>
+        <DoubtSolver />
       </div>
     </div>
   );
