@@ -17,3 +17,4 @@ pip install -r requirements.txt
 export OPENAI_API_KEY=sk-...  # (optional, improves answers)
 flask --app app run  # or: python app.py
 
+A basic prototype of how this app or website would look is:- https://insight-aid-ai.lovable.app/auth
