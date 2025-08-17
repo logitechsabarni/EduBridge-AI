@@ -3,62 +3,56 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
-
-# Load env variables
-load_dotenv()
 
 # Initialize Flask
 app = Flask(__name__)
 CORS(app)
 
-# SQLite DB (optional for login persistence)
+# Database setup (SQLite for now, you can switch to PostgreSQL later)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# User Model (SQLAlchemy)
+# User model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
 
-# Create tables (only if not exist)
-with app.app_context():
-    db.create_all()
-    # Add a test user if not exists
-    if not User.query.filter_by(email="test@example.com").first():
-        db.session.add(User(email="test@example.com", password="password123", name="Test User"))
-        db.session.commit()
+# Initialize OpenAI client (automatically reads from OPENAI_API_KEY env var)
+client = OpenAI()
 
+# Root route
 @app.route("/")
 def home():
     return {"ok": True, "service": "EduBridgeAI Backend"}
 
+# Health check route
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"ok": True, "service": "EduBridgeAI Backend"})
 
-# ✅ Login with DB
+# Login route
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.json
-    email = data.get("email")
-    password = data.get("password")
+    try:
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
 
-    if not email or not password:
-        return jsonify({"error": "Email and password required"}), 400
+        if not username or not password:
+            return jsonify({"error": "Username and password required"}), 400
 
-    user = User.query.filter_by(email=email).first()
-    if user and user.password == password:
-        return jsonify({"name": user.name, "email": email})
-    else:
-        return jsonify({"error": "Invalid credentials"}), 401
+        user = User.query.filter_by(username=username, password=password).first()
 
-# ✅ Chat
+        if user:
+            return jsonify({"success": True, "message": "Login successful!"})
+        else:
+            return jsonify({"success": False, "message": "Invalid credentials"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Chat route
 @app.route("/api/chat", methods=["POST"])
 def chat():
     try:
@@ -82,13 +76,12 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ✅ Doubt solver
+# Doubt Solver route
 @app.route("/api/doubt", methods=["POST"])
 def doubt():
     try:
         data = request.json
         question = data.get("question", "")
-
         if not question:
             return jsonify({"answer": "(No question provided)"}), 400
 
@@ -99,14 +92,15 @@ def doubt():
                 {"role": "user", "content": question}
             ],
         )
-
         answer = response.choices[0].message.content
         return jsonify({"answer": answer})
 
     except Exception as e:
         return jsonify({"answer": f"(Error) {str(e)}"}), 500
 
-
+# Run app
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()  # Create users table if it doesn’t exist
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
