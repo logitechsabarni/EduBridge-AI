@@ -8,8 +8,9 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-# Database setup (SQLite for now, you can switch to PostgreSQL later)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+# Database setup (SQLite locally, PostgreSQL in Render via DATABASE_URL)
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///users.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -19,7 +20,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
 
-# Initialize OpenAI client (automatically reads from OPENAI_API_KEY env var)
+# Initialize OpenAI client (reads from OPENAI_API_KEY env var)
 client = OpenAI()
 
 # Root route
